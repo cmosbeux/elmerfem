@@ -2053,6 +2053,8 @@ END BLOCK
           ! Some tensor calculation shows that the component form of this term is analogous to 
           ! the case < A x n, v x n>. 
           !
+          ! TODO: remove this if circuit driven BC and make sure 
+          !       the corresponding term is in CircuitsAndDynamics!
           STIFF(p,q) = STIFF(p,q) + invZs * &
               SUM(WBasis(i,:) * dBasisdx(q,:)) * detJ * IP % s(t)
         END DO
@@ -2066,6 +2068,8 @@ END BLOCK
       ! boundary or constrained by a Dirichlet condition for the scalar potential).
       !
       DO p = 1,np
+        ! TODO: remove this if circuit driven BC and make sure 
+        !       the corresponding term is in CircuitsAndDynamics!
         DO q = 1,np
           STIFF(p,q) = STIFF(p,q) + delta * cond * &
               SUM(dBasisdx(p,:) * dBasisdx(q,:)) * detJ * IP % s(t)

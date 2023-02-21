@@ -1962,6 +1962,17 @@ SUBROUTINE CircuitsAndDynamicsHarmonic( Model,Solver,dt,TransientSimulation )
       ! ------------------------------------------------
       IF(dim==2) cmplx_val = IP % s(t)*detJ*localC*grads_coeff**2*circ_eq_coeff * Comp % VoltageFactor
 
+      ! TODO: if SkinBC is activated:
+      !   Layer Electric Conductivity = Real 58e6
+      !   Layer Relative Permeability = Real 1
+      ! Then activate the circuit equivalent of
+      ! MagnetoDynamics2DHarmonic.F90:2074 
+      !    STIFF(p,q) = STIFF(p,q) + delta * cond * &
+      !        SUM(dBasisdx(p,:) * dBasisdx(q,:)) * detJ * IP % s(t)
+      !
+      ! Note that this for the component equation, the 
+      ! corresponding source for the A-equation is on CircuitsAndDynamics.F90:2015
+      !
       IF(dim==3) cmplx_val = IP % s(t)*detJ*localC*SUM(gradv*gradv) * Comp % VoltageFactor
 
       localConductance = ABS(cmplx_val)
@@ -2000,6 +2011,14 @@ SUBROUTINE CircuitsAndDynamicsHarmonic( Model,Solver,dt,TransientSimulation )
         ! ---------------------------------------------------------
         IF(dim==2) cmplx_val = im * Omega * IP % s(t)*detJ*localC*basis(j)*grads_coeff*circ_eq_coeff
 
+        ! TODO: if SkinBC is activated:
+        !   Layer Electric Conductivity = Real 58e6
+        !   Layer Relative Permeability = Real 1
+        ! Then activate the circuit equivalent of
+        ! MagnetoDynamics2DHarmonic.F90:2058 
+        !  STIFF(p,q) = STIFF(p,q) + invZs * &
+        !      SUM(WBasis(i,:) * dBasisdx(q,:)) * detJ * IP % s(t)
+        !
         IF(dim==3) cmplx_val = im * Omega * IP % s(t)*detJ*localC*SUM(Wbasis(j,:)*gradv)
 
         CALL AddToCmplxMatrixElement(CM, vvarId, ReIndex(PS(Indexes(q))), &
@@ -2009,6 +2028,14 @@ SUBROUTINE CircuitsAndDynamicsHarmonic( Model,Solver,dt,TransientSimulation )
 !        Comp % Inductance = Comp % Inductance + localL
         
         IF(dim==2) cmplx_val = IP % s(t)*detJ*localC*basis(j)*grads_coeff * Comp % VoltageFactor
+        ! TODO: if SkinBC is activated:
+        !   Layer Electric Conductivity = Real 58e6
+        !   Layer Relative Permeability = Real 1
+        ! Then activate the circuit equivalent of
+        ! MagnetoDynamics2DHarmonic.F90:2074 
+        !    STIFF(p,q) = STIFF(p,q) + delta * cond * &
+        !        SUM(dBasisdx(p,:) * dBasisdx(q,:)) * detJ * IP % s(t)
+        !
         IF(dim==3) cmplx_val = IP % s(t)*detJ*localC*SUM(gradv*Wbasis(j,:)) * Comp % VoltageFactor 
         CALL AddToCmplxMatrixElement(CM, ReIndex(PS(indexes(q))), vvarId, &
                 REAL(cmplx_val), AIMAG(cmplx_val))
