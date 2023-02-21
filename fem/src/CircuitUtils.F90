@@ -1202,8 +1202,19 @@ END FUNCTION isComponentName
      IMPLICIT NONE
      TYPE(Component_t), POINTER :: Component
      TYPE(Element_t), POINTER :: Element
-     LOGICAL :: T
-     T = IdInList(Element % BodyId, Component % BodyIds)
+     INTEGER :: k
+     LOGICAL :: T, Found
+
+     k = GetInteger(GetBC(Element), 'Component', Found)
+     
+     IF (Found) THEN
+       T = (k .eq. Component % ComponentId)
+     ELSE IF (ASSOCIATED(Component % BodyIds)) THEN
+       T = IdInList(Element % BodyId, Component % BodyIds)
+     ELSE
+       T = .False.
+     END IF
+
 !------------------------------------------------------------------------------
    END FUNCTION ElAssocToComp
 !------------------------------------------------------------------------------
@@ -1783,6 +1794,11 @@ CONTAINS
           Element => GetActiveElement(q)
           CALL CountComponentElements(Element, Comp, RowId, Rows, Cnts, Done, dofsdone)
         END DO
+
+        DO q=GetNOFBoundaryElements(),1,-1
+          Element => GetActiveElement(q)
+          CALL CountComponentElements(Element, Comp, RowId, Rows, Cnts, Done, dofsdone)
+        END DO
 !        Comp % nofcnts = SUM(Cnts) - temp
 !        print *, ParEnv % Mype, "CompInd:", CompInd, "Comp % nofcnts", Comp % nofcnts
       END DO
@@ -1852,6 +1868,11 @@ CONTAINS
 !        temp = SUM(Cnts)
 !print *, "Active elements ", ParEnv % Mype, ":", GetNOFActive()
         DO q=GetNOFActive(),1,-1
+          Element => GetActiveElement(q)
+          CALL CreateComponentElements(Element, Comp, VvarId, IvarId, Rows, Cols, Cnts, Done, dofsdone)
+        END DO
+
+        DO q=GetNOFBoundaryElements(),1,-1
           Element => GetActiveElement(q)
           CALL CreateComponentElements(Element, Comp, VvarId, IvarId, Rows, Cols, Cnts, Done, dofsdone)
         END DO
