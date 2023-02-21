@@ -162,9 +162,10 @@ CONTAINS
     LOGICAL, SAVE :: Visited=.FALSE.
     ! Components and Bodies:
     ! ----------------------  
-    INTEGER :: BodyId
+    INTEGER :: BodyId, BoundaryId
     INTEGER, POINTER :: BodyAssociations(:) => Null()
-    TYPE(Valuelist_t), POINTER :: BodyParams, ComponentParams
+    INTEGER, POINTER :: BCAssociations(:) => Null()
+    TYPE(Valuelist_t), POINTER :: BodyParams, BCParams, ComponentParams
      
     IF (Visited) RETURN
 
@@ -179,20 +180,37 @@ CONTAINS
       BodyAssociations => ListGetIntegerArray(ComponentParams, 'Body', Found)
 
       IF (.NOT. Found) BodyAssociations => ListGetIntegerArray(ComponentParams, 'Master Bodies', Found)
+
+      IF (.NOT. Found) BCAssociations => ListGetIntegerArray(ComponentParams, 'Master BCs', Found)
       
       IF (.NOT. Found) CYCLE
 
-      DO j = 1, SIZE(BodyAssociations)
-        BodyId = BodyAssociations(j)
-        BodyParams => CurrentModel % Bodies(BodyId) % Values
-        IF (.NOT. ASSOCIATED(BodyParams)) CALL Fatal ('AddComponentsToBodyList', &
-                                                      'Body parameters not found!')
-        k = GetInteger(BodyParams, 'Component', Found)
-        IF (Found) CALL Fatal ('AddComponentsToBodyList', &
-                              'Body '//i2s(BodyId)//' associated to two components!')
-        CALL listAddInteger(BodyParams, 'Component', i)
-        BodyParams => Null()
-      END DO
+      IF (ASSOCIATED(BodyAssociations)) THEN
+        DO j = 1, SIZE(BodyAssociations)
+          BodyId = BodyAssociations(j)
+          BodyParams => CurrentModel % Bodies(BodyId) % Values
+          IF (.NOT. ASSOCIATED(BodyParams)) CALL Fatal ('AddComponentsToBodyList', &
+                                                        'Body parameters not found!')
+          k = GetInteger(BodyParams, 'Component', Found)
+          IF (Found) CALL Fatal ('AddComponentsToBodyList', &
+                                'Body '//TRIM(i2s(BodyId))//' associated to two components!')
+          CALL listAddInteger(BodyParams, 'Component', i)
+          BodyParams => Null()
+        END DO
+      END IF
+      IF (ASSOCIATED(BCAssociations)) THEN
+        DO j = 1, SIZE(BCAssociations)
+          BoundaryId = BCAssociations(j)
+          BCParams => CurrentModel % BCs(BoundaryId) % Values
+          IF (.NOT. ASSOCIATED(BCParams)) CALL Fatal ('AddComponentsToBodyList', &
+                                                        'Boundary Condition parameters not found!')
+          k = GetInteger(BCParams, 'Component', Found)
+          IF (Found) CALL Fatal ('AddComponentsToBodyList', &
+                                'Boundary Condition '//TRIM(i2s(BoundaryId))//' associated to two components!')
+          CALL listAddInteger(BCParams, 'Component', i)
+          BCParams => Null()
+        END DO
+      END IF
     END DO
 
     DO i = 1, SIZE(CurrentModel % Bodies)
@@ -202,9 +220,21 @@ CONTAINS
       j = GetInteger(BodyParams, 'Component', Found)
       IF (.NOT. Found) CYCLE
 
-      WRITE(Message,'(A)') '"Body '//I2S(i)//'" associated to "Component '//I2S(j)//'"' 
+      WRITE(Message,'(A)') '"Body '//TRIM(I2S(i))//'" associated to "Component '//TRIM(I2S(j))//'"' 
       CALL Info('AddComponentsToBodyList',Message,Level=5)
       BodyParams => Null()
+    END DO
+
+    DO i = 1, SIZE(CurrentModel % BCs)
+      BCParams => CurrentModel % BCs(i) % Values
+      IF (.NOT. ASSOCIATED(BCParams)) CALL Fatal ('AddComponentsToBodyList', &
+                                                   'Boundary Condition parameters not found!')
+      j = GetInteger(BCParams, 'Component', Found)
+      IF (.NOT. Found) CYCLE
+
+      WRITE(Message,'(A)') '"Boundary Condition '//TRIM(I2S(i))//'" associated to "Component '//TRIM(I2S(j))//'"' 
+      CALL Info('AddComponentsToBodyList',Message,Level=5)
+      BCParams => Null()
     END DO
 !------------------------------------------------------------------------------
   END SUBROUTINE AddComponentsToBodyLists
