@@ -1568,6 +1568,12 @@ SUBROUTINE CircuitsAndDynamicsHarmonic( Model,Solver,dt,TransientSimulation )
         CALL AddComponentElementContributions(Element, Comp, Tcoef, &
                                               sigma_33, sigmaim_33)
       END DO
+
+      DO q=GetNOFBoundaryElements(),1,-1
+        Element => GetActiveElement(q)
+        CALL AddComponentElementContributions(Element, Comp, Tcoef, &
+                                              sigma_33, sigmaim_33)
+      END DO
     END DO
 
     IF( Circuit % Parallel ) THEN
