@@ -428,7 +428,7 @@ CONTAINS
     IF( Particles % NumberOfGroups > 0 ) THEN
       Particles % Group(No) = Index
     ELSE
-      CALL Warn('SetParticleGroup','Cannot set particle because there is only one group!')
+      CALL Warn('SetParticleGroup','Cannot set particle because there is only one group!!')
     END IF
     
   END SUBROUTINE SetParticleGroup
